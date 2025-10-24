@@ -11,7 +11,6 @@ def setup_api_key():
     environment variables.
     """
     try:
-
         api_key = os.environ["GOOGLE_API_KEY"]
         if not api_key:
             raise ValueError("GOOGLE_API_KEY environment variable not set.")
@@ -39,13 +38,11 @@ def get_image_parts(image_paths):
             continue
         
         try:
-
             img = Image.open(path)
             
-            # Determine mime type
+
             mime_type, _ = mimetypes.guess_type(path)
             if mime_type is None:
-
                 mime_type = f"image/{img.format.lower()}"
                 
             print(f"Loading image: {path_str} (MIME type: {mime_type})")
@@ -92,7 +89,23 @@ def generate_description(user_text, image_parts):
         print("No valid images were loaded. Cannot generate description.")
         return
 
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    system_prompt = """
+You are an expert e-commerce copywriter. Your responses must be energetic, persuasive, and professional. 
+You will be given images of a product and a user's instructions.
+Your job is to synthesize this information into:
+1.  A compelling product title.
+2.  A 2-3 sentence product description.
+3.  A bulleted list of 3-5 key features.
+4.  A short, catchy marketing slogan.
+
+Format your response clearly using markdown. Do not add any extra conversation or preamble.
+"""
+
+    model = genai.GenerativeModel(
+        'gemini-2.5-flash', # 
+        system_instruction=system_prompt
+    )
+    # --- End of Change ---
 
     prompt_parts = [user_text] + image_parts
 
@@ -108,16 +121,12 @@ def generate_description(user_text, image_parts):
 def main():
     setup_api_key()
     
-
     user_text, image_paths = get_user_inputs()
     
-
     image_parts = get_image_parts(image_paths)
     
-
     description = generate_description(user_text, image_parts)
     
-
     if description:
         print("\n--- Generated Product Content ---")
         print(description)
